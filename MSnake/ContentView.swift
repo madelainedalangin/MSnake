@@ -1,6 +1,7 @@
 //
 //  ContentView.swift
 //  MSnake
+// - A snake game that spawns random types of food. Speed of snake increases after every food consumption.
 //
 //  Created by Madelaine Dalangin on 2025-06-01.
 //
@@ -19,7 +20,6 @@ enum Direction {
 struct ContentView: View {
     let gridSize = 12
     let cellSize: CGFloat = 30
-    
     @State var snake: [Grid] = [Grid(col: 5, row: 5)]
     @State private var snakeFood: Grid = Grid(col: 2, row: 5)
     @State private var direction: Direction = .right
@@ -28,10 +28,10 @@ struct ContentView: View {
     @State private var highScore: Int = 0
     @State private var timer: Timer? = nil
     @State private var fasterSnake: Double = 0.5
-    
     //Random foods for funsies
     let food = ["🥩", "🍌", "🌮", "🥭", "🐀"]
     @State private var foodCurrentlyShown: String = "🐀"
+    //--------------------------------------------------//
 
     var body: some View {
         ZStack {
@@ -56,6 +56,9 @@ struct ContentView: View {
                     Spacer()
                 }
                 
+                .blur(radius: isGameOver ? 25 : 0)
+                .opacity(isGameOver ? 0.2 : 1)
+                
                 
                 //Snake Grid
                 ZStack {
@@ -71,7 +74,9 @@ struct ContentView: View {
                                 )
                         }
                     }
-                    //Snek body
+                    .blur(radius: isGameOver ? 25 : 0)
+                    .opacity(isGameOver ? 0.2 : 1)
+                    //Body of Snake
                     ForEach(snake, id: \.self) { segment in
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.green)
@@ -80,7 +85,10 @@ struct ContentView: View {
                                 x: CGFloat(segment.col) * cellSize + cellSize / 2,
                                 y: CGFloat(segment.row) * cellSize + cellSize / 2
                             )
+
                     }
+                    .blur(radius: isGameOver ? 25 : 0)
+                    .opacity(isGameOver ? 0.2 : 1)
                     //Snake Food
                     Text(foodCurrentlyShown)
                         .font(.system(size: cellSize))
@@ -88,12 +96,41 @@ struct ContentView: View {
                             x: CGFloat(snakeFood.col) * cellSize + cellSize / 2,
                             y: CGFloat(snakeFood.row) * cellSize + cellSize / 2
                         )
+                        .blur(radius: isGameOver ? 25 : 0)
+                        .opacity(isGameOver ? 0.2 : 1)
+                    if isGameOver {
+                        VStack(spacing: 6) {
+                            Text("Game Over")
+                                .font(.largeTitle.bold())
+                                .foregroundStyle(
+                                    LinearGradient(gradient: Gradient(colors: [.blue, .mint]),
+                                                   startPoint: .leading, endPoint: .trailing))
+                                .shadow(radius: 4)
+                            Text("Score: \(score)")
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .shadow(radius: 6)
+
+                            Spacer()
+                            Button(action: resetGame) {
+                                Text("Play Again")
+                                    .font(.title)
+                                    .padding()
+                                    .background(Color.mint)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(16)
+                            }
+                        }
+                    }
+
                 }
                 .frame(
                     width: CGFloat(gridSize) * cellSize,
                     height: CGFloat(gridSize) * cellSize)
                 .gesture(swiping)
             }
+
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .onAppear {
                 startTimer()
@@ -102,18 +139,19 @@ struct ContentView: View {
                 timer?.invalidate()
             }
         }
+
     }
     //Timer
     func startTimer(){
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: fasterSnake, repeats: true) { _ in
-            moveSnake()
+            move()
         }
     }
-    //Snek movement
-    func moveSnake() {
+    //Snake movement
+    func move() {
         if isGameOver {
-            return
+            isGameOver = true
         }
         var newHead = snake[0]
         switch direction {
@@ -147,7 +185,17 @@ struct ContentView: View {
             newFood = Grid(col: Int.random(in: 0..<gridSize), row: Int.random(in: 0..<gridSize))
         } while snake.contains(newFood)
         snakeFood = newFood
+        score += 1
         foodCurrentlyShown = food.randomElement() ?? "🍎"
+    }
+    func resetGame() {
+        snake = [Grid(col: 5, row: 5)]
+        direction = .right
+        score = 0
+        isGameOver = false
+        fasterSnake = 0.5
+        spawnFood()
+        startTimer()
     }
     
     var swiping: some Gesture {
@@ -169,6 +217,7 @@ struct ContentView: View {
                 }
             }
     }
+
 }
 
 struct ContentView_Previews: PreviewProvider {
