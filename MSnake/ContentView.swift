@@ -25,7 +25,6 @@ struct ContentView: View {
     @State private var direction: Direction = .right
     @State private var isGameOver: Bool = false
     @State private var score: Int = 0
-    @State private var highScore: Int = 0
     @State private var timer: Timer? = nil
     @State private var fasterSnake: Double = 0.5
     //Random foods for funsies
@@ -187,15 +186,16 @@ struct ContentView: View {
         snakeFood = newFood
         score += 1
         foodCurrentlyShown = food.randomElement() ?? "🍎"
+        
     }
     func resetGame() {
         snake = [Grid(col: 5, row: 5)]
         direction = .right
-        score = 0
         isGameOver = false
         fasterSnake = 0.5
         spawnFood()
         startTimer()
+        score = 0
     }
     
     var swiping: some Gesture {
